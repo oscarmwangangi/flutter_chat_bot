@@ -67,23 +67,38 @@ class _LoginScreenState extends State<LoginScreen> {
               RoundedButton(
                 Buttontitle:   'Log In',
                 color: Colors.lightBlueAccent,
-                onPressed: () async {
-                  setState(() {
-                    showSpinner = true;
-                  });
-                  try{
-                    final loggedInUser = await _auth.signInWithEmailAndPassword(email: email, password: password);
-                    if (loggedInUser != null){
-                      Navigator.pushNamed(context, ChatScreen.id);
+                  onPressed: () async {
+                    setState(() {
+                      showSpinner = true;
+                    });
+
+                    try {
+                      final loggedInUser = await _auth.signInWithEmailAndPassword(
+                        email: email.trim(),
+                        password: password.trim(),
+                      );
+
+                      if (loggedInUser.user != null) {
+                        debugPrint('✅ Login successful for ${loggedInUser.user!.email}');
+                        Navigator.pushNamed(context, ChatScreen.id);
+                      }
+                    } on FirebaseAuthException catch (e) {
+                      debugPrint('❌ Firebase Auth Error: ${e.code} - ${e.message}');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Login failed: ${e.message}')),
+                      );
+                    } catch (e) {
+                      debugPrint('❌ Unexpected Error: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('An error occurred. Please try again.')),
+                      );
+                    } finally {
                       setState(() {
                         showSpinner = false;
                       });
                     }
-                  }catch(e){
-                    print(e);
-                  }
+                  },
 
-                },
               )
             ],
           ),
